@@ -3,9 +3,9 @@ const { Joi, celebrate } = require('celebrate');
 const movieController = require('../controllers/movie');
 const { urlRegex } = require('../utils/utils');
 
-router.get('/movies', movieController.getMovies);
+router.get('/', movieController.getMovies);
 
-router.post('/movies', celebrate({
+router.post('/', celebrate({
   body: Joi.object().keys({
     country: Joi.string().required(),
     director: Joi.string().required(),
@@ -15,14 +15,13 @@ router.post('/movies', celebrate({
     image: Joi.string().required().pattern(new RegExp(urlRegex)),
     trailerLink: Joi.string().required().pattern(new RegExp(urlRegex)),
     thumbnail: Joi.string().required().pattern(new RegExp(urlRegex)),
-    owner: Joi.string().length(24).hex(),
     movieId: Joi.string().length(24).hex(),
     nameRU: Joi.string().required(),
     nameEN: Joi.string().required(),
   }),
 }), movieController.createMovie);
 
-router.delete('/movieId', celebrate({
+router.delete('/:movieId', celebrate({
   params: Joi.object().keys({
     movieId: Joi.string().length(24).hex(),
   }),

@@ -4,7 +4,7 @@ const getMovies = (req, res) => {
   const { _id } = req.user;
   Movie.find({ owner: _id })
     .then((movies) => res.send(movies))
-    .cathc((e) => res.status(500).send({ message: e.message }));
+    .catch((e) => res.status(500).send({ message: e.message }));
 };
 
 const createMovie = (req, res) => {
@@ -17,7 +17,14 @@ const createMovie = (req, res) => {
 
 const deleteMovie = (req, res) => {
   const { movieId } = req.params;
-  Movie.findByIdAndRemove(movieId)
+  Movie.findById(movieId)
+    .then((movie) => {
+      if (movie.owner.toString() !== req.user._id) {
+        res.status(403).send({ message: 'Недостаточно прав' });
+        return Promise.reject();
+      }
+      return Movie.findByIdAndRemove(movieId);
+    })
     .then((movie) => res.status(200).send(movie))
     .catch((e) => res.status(500).send({ message: e.message }));
 };
