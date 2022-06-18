@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { emailRegex } = require('../utils/utils');
+const { emailRegex } = require('../utils/constants');
 
 const user = new mongoose.Schema({
   email: {

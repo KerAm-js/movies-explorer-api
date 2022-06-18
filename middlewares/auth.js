@@ -7,23 +7,19 @@ const auth = (req, res, next) => {
   const { authorization } = req.headers;
   if (!authorization || !authorization.startsWith('Bearer ')) {
     res.status(401).send({ message: 'Ошибка авторизации' });
+    return;
   }
 
-  let token;
+  const token = authorization.replace('Bearer ', '');
   let payload;
 
   try {
-    token = authorization.replace('Bearer ', '');
     payload = jwt.verify(token, NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret');
-    req.user = {
-      _id: payload,
-    };
   } catch (e) {
     return;
   }
-  // req.user = {
-  //   _id: '62ace0621b91115ea65ec51e',
-  // };
+
+  req.user = payload;
   next();
 };
 
