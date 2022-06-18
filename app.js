@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const { Joi, errors, celebrate } = require('celebrate');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 const userRouter = require('./routes/user');
 const movieRouter = require('./routes/movie');
 const userController = require('./controllers/user');
@@ -16,6 +17,7 @@ mongoose.connect('mongodb://localhost:27017/movies-explorer-db', {
 });
 
 app.use(express.json());
+app.use(requestLogger);
 app.post('/signup', celebrate({
   body: Joi.object().keys({
     email: Joi.string().required().email(),
@@ -32,6 +34,7 @@ app.post('/signin', celebrate({
 app.use('/users', auth, userRouter);
 app.use('/movies', auth, movieRouter);
 app.use('/', auth, pageNotFound);
+app.use(errorLogger);
 app.use(errors());
 app.use(errorHandling);
 
