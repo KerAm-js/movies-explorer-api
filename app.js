@@ -1,39 +1,23 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const { Joi, errors, celebrate } = require('celebrate');
+const helmet = require('helmet');
+const { errors } = require('celebrate');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
-const userRouter = require('./routes/user');
-const movieRouter = require('./routes/movie');
-const userController = require('./controllers/user');
-const auth = require('./middlewares/auth');
+const router = require('./routes/index');
 const errorHandling = require('./middlewares/errorHandling');
-const pageNotFound = require('./middlewares/pageNotFound');
+const limiter = require('./limiter.config');
 
 const app = express();
-const { PORT = 3000 } = process.env;
-
-mongoose.connect('mongodb://localhost:27017/movies-explorer-db', {
+const { PORT = 3000, DATA_BASE = 'mongodb://localhost:27017/movies-explorer-db' } = process.env;
+mongoose.connect(DATA_BASE, {
   useNewUrlParser: true,
 });
 
-app.use(express.json());
 app.use(requestLogger);
-app.post('/signup', celebrate({
-  body: Joi.object().keys({
-    email: Joi.string().required().email(),
-    name: Joi.string().required().min(2).max(30),
-    password: Joi.string().required(),
-  }),
-}), userController.createUser);
-app.post('/signin', celebrate({
-  body: Joi.object().keys({
-    email: Joi.string().required().email(),
-    password: Joi.string().required(),
-  }),
-}), userController.login);
-app.use('/users', auth, userRouter);
-app.use('/movies', auth, movieRouter);
-app.use('/', auth, pageNotFound);
+app.use(limiter);
+app.use(helmet());
+app.use(express.json());
+app.use(router);
 app.use(errorLogger);
 app.use(errors());
 app.use(errorHandling);

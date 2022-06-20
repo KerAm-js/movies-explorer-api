@@ -6,6 +6,7 @@ const ConflictError = require('../errors/ConflictError');
 const NotFoundError = require('../errors/NotFoundError');
 const UnauthorizedError = require('../errors/UnauthorizedError');
 const User = require('../models/user');
+const { messages } = require('../utils/constants');
 
 dotenv.config();
 
@@ -21,11 +22,11 @@ const createUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError('Некорректные данные пользователя'));
+        next(new BadRequestError(messages.UNVALID_USER_DATA));
         return;
       }
       if (err.code === 11000) {
-        next(new ConflictError('Пользователь с таким email уже существует'));
+        next(new ConflictError(messages.USER_EMAIL_CONFLICT));
         return;
       }
       next(err);
@@ -35,12 +36,8 @@ const createUser = (req, res, next) => {
 const getUserInfo = (req, res, next) => {
   const { _id } = req.user;
   User.findById(_id)
-    .then((user) => res.send(user))
+    .then((user) => res.status(200).send(user))
     .catch((err) => {
-      if (err.name === 'CastError') {
-        next(new BadRequestError('Некорректные данные пользователя'));
-        return;
-      }
       next(err);
     });
 };
@@ -48,10 +45,14 @@ const getUserInfo = (req, res, next) => {
 const updateUserInfo = (req, res, next) => {
   const { _id } = req.user;
   const { email, name } = req.body;
+  // Не понимаю почему, но на моя mongoDB не выбрасывает ошибку 11000,
+  // когда я меняю email на уже существующий через User.findByIdAndUpdate;
+  // поэтому я использую 2 запроса;
+  // возможно, это из-за версии, у меня стоит 4.4
   User.find({ email })
     .then((result) => {
       if (Array.isArray(result) && result.length > 0) {
-        return Promise.reject(new ConflictError('Пользователь с таким email уже существует'));
+        return Promise.reject(new ConflictError(messages.USER_EMAIL_CONFLICT));
       }
       return User.findByIdAndUpdate(_id, { email, name }, {
         new: true,
@@ -62,7 +63,7 @@ const updateUserInfo = (req, res, next) => {
     .then((user) => res.status(200).send(user))
     .catch((err) => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
-        next(new BadRequestError('Некорректные данные пользователя'));
+        next(new BadRequestError(messages.UNVALID_USER_DATA));
         return;
       }
       next(err);
@@ -74,23 +75,23 @@ const login = (req, res, next) => {
   User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return Promise.reject(new NotFoundError('Пользователь не найден'));
+        return Promise.reject(new NotFoundError(messages.USER_NOT_FOUND));
       }
       return bcrypt.compare(password, user.password)
         .then((result) => {
           if (!result) {
-            return Promise.reject(new UnauthorizedError('Неверные данные пользователя'));
+            return Promise.reject(new UnauthorizedError(messages.UNVALID_USER_DATA));
           }
           return user;
         });
     })
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret', { expiresIn: 3600 * 24 * 7 });
-      res.status(200).send({ message: 'Вы успешно авторизировались', token });
+      res.status(200).send({ message: messages.SUCCESS_AUTH, token });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError('Некорректный email'));
+        next(new BadRequestError(messages.UNVALID_USER_DATA));
         return;
       }
       next(err);
