@@ -45,29 +45,23 @@ const getUserInfo = (req, res, next) => {
 const updateUserInfo = (req, res, next) => {
   const { _id } = req.user;
   const { email, name } = req.body;
-  // Не понимаю почему, но на моя mongoDB не выбрасывает ошибку 11000,
-  // когда я меняю email на уже существующий через User.findByIdAndUpdate;
-  // поэтому я использую 2 запроса;
-  // возможно, это из-за версии, у меня стоит 4.4
-  User.find({ email })
-    .then((result) => {
-      if (Array.isArray(result) && result.length > 0) {
-        return Promise.reject(new ConflictError(messages.USER_EMAIL_CONFLICT));
-      }
-      return User.findByIdAndUpdate(_id, { email, name }, {
-        new: true,
-        runValidators: true,
-        upsert: false,
-      });
-    })
-    .then((user) => res.status(200).send(user))
-    .catch((err) => {
-      if (err.name === 'CastError' || err.name === 'ValidationError') {
-        next(new BadRequestError(messages.UNVALID_USER_DATA));
-        return;
-      }
-      next(err);
-    });
+  User.findByIdAndUpdate(_id, { email, name }, {
+    new: true,
+    runValidators: true,
+    upsert: false,
+  })
+  .then((user) => res.status(200).send(user))
+  .catch((err) => {
+    if (err.name === 'CastError' || err.name === 'ValidationError') {
+      next(new BadRequestError(messages.UNVALID_USER_DATA));
+      return;
+    }
+    if (err.code === 11000) {
+      next(new ConflictError(messages.USER_EMAIL_CONFLICT));
+      return;
+    }
+    next(err);
+  });
 };
 
 const login = (req, res, next) => {
