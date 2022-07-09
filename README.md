@@ -2,4 +2,4 @@
 
 Ссылка на api
 
-https://amir.movies-explorer.nomoreparties.sbs
+https://amir.movies-explorer.nomoreparties.sbs/api
