@@ -12,7 +12,10 @@ const { PORT = 3000, DATA_BASE = 'mongodb://localhost:27017/movies-explorer-db' 
 mongoose.connect(DATA_BASE, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+<<<<<<< HEAD
   useCreateIndex: true,
+=======
+>>>>>>> bc842be71f0e178e01449cd1e0ce8b551567c1ef
   autoIndex: true,
 });
 
