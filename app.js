@@ -9,6 +9,7 @@ const limiter = require('./limiter.config');
 
 const app = express();
 const { PORT = 3000, DATA_BASE = 'mongodb://localhost:27017/movies-explorer-db' } = process.env;
+
 mongoose.connect(DATA_BASE, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
