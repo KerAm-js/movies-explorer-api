@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
+const cors = require('cors');
 const { errors } = require('celebrate');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 const router = require('./routes/index');
@@ -18,6 +19,10 @@ mongoose.connect(DATA_BASE, {
 
 app.use(requestLogger);
 app.use(limiter);
+app.use(cors({
+  origin: 'https://amir.movies-explorer.nomoreparties.sbs',
+  credentials: true,
+}))
 app.use(helmet());
 app.use(express.json());
 app.use(router);
