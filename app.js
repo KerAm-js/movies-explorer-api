@@ -18,12 +18,12 @@ mongoose.connect(DATA_BASE, {
 });
 
 app.use(requestLogger);
-app.use(limiter);
 app.use(cors({
-  origin: 'https://amir.movies-explorer.nomoreparties.sbs',
+  origin: 'https://amir.movies-explorer.nomoreparties.sbs/',
   credentials: true,
 }))
 app.use(helmet());
+app.use(limiter);
 app.use(express.json());
 app.use(router);
 app.use(errorLogger);
