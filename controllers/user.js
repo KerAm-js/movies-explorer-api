@@ -3,7 +3,6 @@ const bcrypt = require('bcrypt');
 const dotenv = require('dotenv');
 const BadRequestError = require('../errors/BadRequestError');
 const ConflictError = require('../errors/ConflictError');
-const NotFoundError = require('../errors/NotFoundError');
 const UnauthorizedError = require('../errors/UnauthorizedError');
 const User = require('../models/user');
 const { messages } = require('../utils/constants');
@@ -69,7 +68,7 @@ const login = (req, res, next) => {
   User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return Promise.reject(new NotFoundError(messages.USER_NOT_FOUND));
+        return Promise.reject(new UnauthorizedError(messages.USER_NOT_FOUND));
       }
       return bcrypt.compare(password, user.password)
         .then((result) => {
